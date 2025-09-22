@@ -62,7 +62,7 @@ export default function Navbar() {
             <div className="flex gap-4">
               <NavLink
                 to="/auth/login"
-                className="px-5 py-2 bg-primary text-white rounded-lg shadow-lg hover:bg-primary/90 transition transform hover:-translate-y-1"
+                className="px-5 py-2 bg-primary  rounded-lg shadow-lg hover:bg-primary/90 transition transform hover:-translate-y-1"
               >
                 Login
               </NavLink>
