@@ -166,7 +166,7 @@ export default function Navbar() {
                   <NavLink
                     to="/auth/login"
                     onClick={() => setMobileOpen(false)}
-                    className="py-2 px-3 bg-primary text-white rounded-lg text-center hover:bg-primary/90 transition"
+                    className="py-2 px-3 bg-primary  rounded-lg text-center hover:bg-primary/90 transition"
                   >
                     Login
                   </NavLink>
