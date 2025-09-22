@@ -1,37 +1,73 @@
-import React, { useEffect, useState } from "react";
 import API from "../../api/axios";
-import ImageWithFallback from "../../components/common/ImageWithFallback";
+import Navbar from "../../components/Dashboad/dashboardNavbar";
+import ComplaintForm from "../../components/Dashboad/ComplaintForm";
+import ComplaintCard from "../../components/Dashboad/ComplaintCard";
+import RewardCard from "../../components/Dashboad/RewardCard";
+import Loader from "../../components/common/Loader";
+import { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 
 export default function CitizenDashboard() {
+  const [activeTab, setActiveTab] = useState("Raise Complaint");
   const [complaints, setComplaints] = useState([]);
+  const [rewards, setRewards] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(()=> {
-    API.get("/complaints/my")
-      .then(res => setComplaints(res.data))
-      .catch(()=>{})
-      .finally(()=>setLoading(false));
-  },[]);
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [complaintRes, rewardRes] = await Promise.all([
+        API.get("/complaints/my"),
+        API.get("/rewards/my"),
+      ]);
+      setComplaints(complaintRes.data);
+      setRewards(rewardRes.data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load data.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  if(loading) return <div className="p-8">Loading...</div>;
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleComplaintRaised = (newComplaint) => {
+    if (newComplaint?._id) {
+      setComplaints([newComplaint, ...complaints]);
+      setActiveTab("My Complaints");
+      toast.success("Complaint raised successfully!");
+    } else {
+      toast.error("Failed to raise complaint. Try again.");
+    }
+  };
 
   return (
     <div className="container mx-auto p-6">
-      <h2 className="text-2xl font-semibold mb-4">My Complaints</h2>
-      <div className="grid md:grid-cols-3 gap-4">
-        {complaints.map(c => (
-          <div className="bg-white rounded shadow p-4" key={c._id}>
-            <h4 className="font-semibold">{c.category || "Uncategorized"}</h4>
-            <p className="text-sm text-gray-600">{c.autoDescription || c.description}</p>
-            <div className="mt-2 h-40">
-              <ImageWithFallback src={c.imageUrl} alt="complaint" />
-            </div>
-            <div className="mt-2">
-              <span className="text-xs px-2 py-1 bg-gray-100 rounded">{c.status}</span>
-            </div>
+      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
+      {loading && <Loader />}
+
+      {!loading && activeTab === "Raise Complaint" && (
+        <ComplaintForm onComplaintRaised={handleComplaintRaised} />
+      )}
+
+      {!loading && activeTab === "My Complaints" && (
+        complaints.length === 0 ? (
+          <p className="text-gray-500">
+            You haven't raised any complaints yet.
+          </p>
+        ) : (
+          <div className="grid md:grid-cols-3 gap-4">
+            {complaints.map((c) => (
+              <ComplaintCard key={c._id} complaint={c} />
+            ))}
           </div>
-        ))}
-      </div>
+        )
+      )}
+
+      {!loading && activeTab === "Rewards" && <RewardCard rewards={rewards} />}
     </div>
   );
 }

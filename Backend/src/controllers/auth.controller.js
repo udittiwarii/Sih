@@ -91,9 +91,28 @@ exports.workerLoginByKey = async (req, res) => {
             sameSite: "strict",
         });
         res.json({
-            message:'Worker login '
+            message: 'Worker login '
         });
     } catch (err) {
         res.status(500).json({ message: "Worker login failed", error: err.message });
+    }
+};
+
+
+exports.getMe = async (req, res) => {
+    try {
+        // req.user is already attached by your middleware
+        res.json({
+            user: {
+                id: req.user._id,
+                name: req.user.name,
+                email: req.user.email,
+                role: req.user.role,
+                points : req.user.points
+            },
+        });
+    } catch (err) {
+        console.error("getMe error:", err.message);
+        res.status(500).json({ message: "Server error" });
     }
 };

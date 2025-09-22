@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useAuth } from "../../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import API from "../../api/axios";
 
 export default function Register() {
+  const { register } = useAuth(); // ✅ use context
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -13,30 +15,33 @@ export default function Register() {
   });
   const [loading, setLoading] = useState(false);
 
+  const { user } = useAuth();
   const navigate = useNavigate();
+
+  // ✅ Redirect after user is set
+  useEffect(() => {
+    if (user?.role) {
+      if (user.role === "admin") navigate("/admin/dashboard");
+      else if (user.role === "worker") navigate("/worker/dashboard");
+      else navigate("/citizen/dashboard");
+    }
+  }, [user, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    // If role changes, clear workerKey if not worker
     if (name === "role" && value !== "worker") {
       setForm((prev) => ({ ...prev, role: value, workerKey: "" }));
     } else {
       setForm((prev) => ({ ...prev, [name]: value }));
     }
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-
     try {
-      const res = await API.post("/auth/register", form);
-      toast.success(res.data.message || "Registration successful!");
-      setTimeout(() => {
-        if(res.role  === 'worker')navigate("/worker/dashboard");
-        else if(res.role) navigate('/admin/dashboard')
-        else navigate('/citizen/dashboard')
-      }, 1500);
+      await register(form); // ✅ this will also fetch user
+      toast.success("Registration successful!");
+      // Redirect handled automatically by useEffect watching `user`
     } catch (err) {
       toast.error(err.response?.data?.message || "Something went wrong!");
     } finally {
@@ -106,8 +111,6 @@ export default function Register() {
           </button>
         </form>
       </div>
-
-      {/* Toast Container */}
       <Toaster position="top-right" reverseOrder={false} />
     </div>
   );

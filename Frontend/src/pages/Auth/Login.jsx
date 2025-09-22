@@ -10,22 +10,24 @@ export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await login(form);
-      toast.success("Login successful!");
-      // Redirect based on role
-      if (res.role === "citizen") navigate("/dashboard/citizen");
-      else if (res.role === "worker") navigate("/dashboard/worker");
-      else if (res.role === "admin") navigate("/dashboard/admin");
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Login failed!");
-    } finally {
-      setLoading(false);
-    }
-  };
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  try {
+    await login(form); // ✅ this will also call fetchUserProfile()
+    toast.success("Login successful!");
+
+    // Redirect using context user instead of backend login response
+    if (user?.role === "citizen") navigate("/citizen/dashboard");
+    else if (user?.role === "worker") navigate("/worker/dashboard");
+    else if (user?.role === "admin") navigate("/admin/dashboard");
+  } catch (err) {
+    toast.error(err.response?.data?.message || "Login failed!");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">

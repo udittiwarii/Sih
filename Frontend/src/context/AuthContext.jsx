@@ -7,21 +7,17 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch user after login using existing API
+  // ✅ Always fetch current user
   const fetchUserProfile = async () => {
     try {
-      // Example logic: call citizen complaints endpoint for citizen
-      const res = await API.get("/complaints/my"); 
-      
-      if (res.data && res.data.length > 0) {
-        setUser({
-          role: "citizen",
-          data: res.data,
-        });
+      const res = await API.get("/auth/me", { withCredentials: true });
+
+      if (res.data) {
+        // backend should return something like: { id, name, email, role }
+        
+        setUser(res.data.user);
       } else {
-        // Fallback: if no complaints or admin/worker, try other endpoints
-        // This is optional depending on backend
-        setUser({ role: "admin", data: [] });
+        setUser(null);
       }
     } catch (err) {
       setUser(null);
@@ -35,19 +31,19 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (formData) => {
-    const res = await API.post("/auth/login", formData); // existing login API
-    await fetchUserProfile(); // fetch profile after login
+    const res = await API.post("/auth/login", formData, { withCredentials: true });
+    await fetchUserProfile(); // refresh user after login
     return res.data;
   };
 
   const register = async (formData) => {
-    const res = await API.post("/auth/register", formData); // existing register API
-    await fetchUserProfile(); 
+    const res = await API.post("/auth/register", formData, { withCredentials: true });
+    await fetchUserProfile(); // refresh user after register
     return res.data;
   };
 
   const logout = async () => {
-    await API.post("/auth/logout"); // if exists, optional
+    await API.post("/auth/logout", {}, { withCredentials: true });
     setUser(null);
   };
 
